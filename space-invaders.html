@@ -189,6 +189,25 @@
         
         const keys = {};
         
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(frequency, duration, type = 'square') {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            oscillator.type = type;
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+        
         document.addEventListener('keydown', (e) => {
             keys[e.key] = true;
             
@@ -198,6 +217,7 @@
                     startGame();
                 } else if (gameState === 'playing') {
                     shoot();
+                    playSound(800, 0.1);
                 }
             }
         });
@@ -315,6 +335,7 @@
                         height: 10,
                         speed: 3
                     });
+                    playSound(400, 0.05);
                 }
             }
             
@@ -338,6 +359,7 @@
                         
                         invader.alive = false;
                         playerBullets.splice(i, 1);
+                        playSound(300, 0.2);
                         
                         if (invader.type === 'small') score += 30;
                         else if (invader.type === 'medium') score += 20;
@@ -359,6 +381,7 @@
                     
                     enemyBullets.splice(i, 1);
                     lives--;
+                    playSound(150, 0.5);
                     updateUI();
                     
                     if (lives <= 0) {
@@ -375,6 +398,7 @@
                     gameState = 'gameOver';
                     finalScoreElement.textContent = score;
                     gameOverElement.style.display = 'block';
+                    playSound(100, 1.0);
                     break;
                 }
             }
@@ -384,6 +408,7 @@
                 gameState = 'victory';
                 victoryScoreElement.textContent = score;
                 victoryElement.style.display = 'block';
+                playSound(600, 0.8);
             }
         }
         
