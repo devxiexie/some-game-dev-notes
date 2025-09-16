@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPS Tester - Clicks Per Second</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 500px;
+            width: 90%;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4ecdc4;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .timer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .timer-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            font-weight: 500;
+        }
+
+        .timer-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .timer-btn.active {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-color: transparent;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .click-button {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 20px auto;
+            display: block;
+            transition: all 0.2s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .click-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .click-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .click-button.clicking {
+            animation: pulse 0.1s ease-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .click-button::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+
+        .click-button:hover::before {
+            animation: shine 1s ease-in-out infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); opacity: 0; }
+        }
+
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .best-score {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .best-score h3 {
+            color: #ffd700;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .disabled {
+            opacity: 0.6;
+            cursor: not-allowed !important;
+            pointer-events: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .click-button {
+                width: 150px;
+                height: 150px;
+                font-size: 1.2em;
+            }
+            
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CPS Tester</h1>
+        <p class="subtitle">Test your clicking speed!</p>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="currentCPS">0.0</div>
+                <div class="stat-label">Current CPS</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="clickCount">0</div>
+                <div class="stat-label">Clicks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="timeLeft">5</div>
+                <div class="stat-label">Time Left</div>
+            </div>
+        </div>
+        
+        <div class="timer-controls">
+            <button class="timer-btn" data-time="1">1s</button>
+            <button class="timer-btn active" data-time="5">5s</button>
+            <button class="timer-btn" data-time="10">10s</button>
+            <button class="timer-btn" data-time="30">30s</button>
+        </div>
+        
+        <button class="click-button" id="clickBtn">
+            Click to Start!
+        </button>
+        
+        <div class="control-buttons">
+            <button class="control-btn" id="resetBtn">Reset</button>
+        </div>
+        
+        <div class="best-score">
+            <h3>Best Scores</h3>
+            <div id="bestScores">
+                <div>1s: <span id="best1s">0.00</span> CPS</div>
+                <div>5s: <span id="best5s">0.00</span> CPS</div>
+                <div>10s: <span id="best10s">0.00</span> CPS</div>
+                <div>30s: <span id="best30s">0.00</span> CPS</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class CPSTester {
+            constructor() {
+                this.isActive = false;
+                this.isStarted = false;
+                this.clickCount = 0;
+                this.startTime = 0;
+                this.duration = 5;
+                this.timer = null;
+                this.audioContext = null;
+                
+                this.initElements();
+                this.initAudio();
+                this.loadBestScores();
+                this.bindEvents();
+                this.updateDisplay();
+            }
+            
+            initElements() {
+                this.clickBtn = document.getElementById('clickBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.currentCPSEl = document.getElementById('currentCPS');
+                this.clickCountEl = document.getElementById('clickCount');
+                this.timeLeftEl = document.getElementById('timeLeft');
+                this.timerBtns = document.querySelectorAll('.timer-btn');
+            }
+            
+            initAudio() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('Audio not supported');
+                }
+            }
+            
+            playClickSound() {
+                if (!this.audioContext) return;
+                
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
+                oscillator.type = 'square';
+                
+                gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+                
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + 0.1);
+            }
+            
+            bindEvents() {
+                this.clickBtn.addEventListener('click', () => this.handleClick());
+                this.resetBtn.addEventListener('click', () => this.resetTest());
+                
+                this.timerBtns.forEach(btn => {
+                    btn.addEventListener('click', () => this.setDuration(parseInt(btn.dataset.time)));
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space' && this.isActive) {
+                        e.preventDefault();
+                        this.handleClick();
+                    }
+                });
+            }
+            
+            setDuration(seconds) {
+                if (this.isActive) return;
+                
+                this.duration = seconds;
+                this.timeLeftEl.textContent = seconds;
+                
+                this.timerBtns.forEach(btn => {
+                    btn.classList.toggle('active', parseInt(btn.dataset.time) === seconds);
+                });
+                
+                if (!this.isStarted) {
+                    this.clickBtn.textContent = 'Click to Start!';
+                }
+            }
+            
+            startTest() {
+                if (this.isActive) return;
+                
+                this.isActive = true;
+                this.isStarted = true;
+                this.clickCount = 0;
+                this.startTime = Date.now();
+                
+                this.clickBtn.textContent = 'Keep Clicking!';
+                
+                this.timerBtns.forEach(btn => btn.classList.add('disabled'));
+                
+                this.timer = setInterval(() => {
+                    const elapsed = (Date.now() - this.startTime) / 1000;
+                    const remaining = Math.max(0, this.duration - elapsed);
+                    
+                    this.timeLeftEl.textContent = remaining.toFixed(1);
+                    
+                    if (remaining <= 0) {
+                        this.endTest();
+                    } else {
+                        this.updateCPS();
+                    }
+                }, 50);
+            }
+            
+            handleClick() {
+                if (!this.isStarted) {
+                    this.startTest();
+                } else if (!this.isActive) {
+                    // Test has ended, start a new test
+                    this.isStarted = false;
+                    this.startTest();
+                    return;
+                }
+                
+                if (!this.isActive) return;
+                
+                this.clickCount++;
+                this.clickCountEl.textContent = this.clickCount;
+                
+                this.clickBtn.classList.add('clicking');
+                setTimeout(() => this.clickBtn.classList.remove('clicking'), 100);
+                
+                this.playClickSound();
+                this.updateCPS();
+            }
+            
+            updateCPS() {
+                const elapsed = (Date.now() - this.startTime) / 1000;
+                const cps = elapsed > 0 ? this.clickCount / elapsed : 0;
+                this.currentCPSEl.textContent = cps.toFixed(2);
+            }
+            
+            endTest() {
+                this.isActive = false;
+                clearInterval(this.timer);
+                
+                const finalCPS = this.clickCount / this.duration;
+                this.currentCPSEl.textContent = finalCPS.toFixed(2);
+                this.timeLeftEl.textContent = '0.0';
+                
+                this.clickBtn.textContent = `${finalCPS.toFixed(2)} CPS`;
+                
+                this.timerBtns.forEach(btn => btn.classList.remove('disabled'));
+                
+                this.checkBestScore(finalCPS);
+            }
+            
+            resetTest() {
+                this.isActive = false;
+                this.isStarted = false;
+                clearInterval(this.timer);
+                
+                this.clickCount = 0;
+                this.updateDisplay();
+                
+                this.clickBtn.textContent = 'Click to Start!';
+                
+                this.timerBtns.forEach(btn => btn.classList.remove('disabled'));
+            }
+            
+            updateDisplay() {
+                this.currentCPSEl.textContent = '0.00';
+                this.clickCountEl.textContent = this.clickCount;
+                this.timeLeftEl.textContent = this.duration;
+            }
+            
+            checkBestScore(cps) {
+                const key = `best${this.duration}s`;
+                const currentBest = parseFloat(localStorage.getItem(key) || '0');
+                
+                if (cps > currentBest) {
+                    localStorage.setItem(key, cps.toFixed(2));
+                    document.getElementById(key).textContent = cps.toFixed(2);
+                    
+                    setTimeout(() => {
+                        alert(`🎉 New Best Score! ${cps.toFixed(2)} CPS in ${this.duration}s!`);
+                    }, 500);
+                }
+            }
+            
+            loadBestScores() {
+                [1, 5, 10, 30].forEach(duration => {
+                    const key = `best${duration}s`;
+                    const score = localStorage.getItem(key) || '0.00';
+                    const formattedScore = parseFloat(score).toFixed(2);
+                    document.getElementById(key).textContent = formattedScore;
+                });
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            new CPSTester();
+        });
+    </script>
+</body>
+
+<!--
+stuff i learned:
+- setInterval vs setTimeout for timers
+- Date.now() for precise timing
+- localStorage saves between sessions
+- toFixed(2) for decimal formatting
+- Web Audio API = simple beeps
+- CSS animations make things feel alive
+- event listeners need cleanup
+- button states matter for UX
+- auto-start beats extra clicks
+- sound feedback = satisfying
+-->
+</html>
